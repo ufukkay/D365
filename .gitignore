@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Production
+build/
+dist/
+
+# Misc
+.DS_Store
+.env
+.npm
+*.log
+*.tmp
+*.bak
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Editor
+.vscode/
+.idea/
+
+# Agent
+.gemini/
