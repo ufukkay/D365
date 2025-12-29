@@ -14,13 +14,31 @@
 *   **🎨 Modern Arayüz:** React, Vite ve TailwindCSS ile geliştirilmiş, gece moduna uyumlu, "Glassmorphism" esintili şık tasarım.
 *   **⚡ Performanslı Veritabanı:** 100.000+ dosyayı saniyeler içinde sorgulayabilen optimize edilmiş SQLite yapısı.
 
+## ⚙️ Sistem Gereksinimleri (Requirements)
+
+Projeyi sorunsuz çalıştırmak için aşağıdaki gereksinimlerin karşılandığından emin olun.
+
+### 💻 Geliştirme Ortamı (Development)
+*   **İşletim Sistemi:** Windows 10/11, MacOS veya Linux.
+*   **Node.js:** v18.0.0 (LTS) veya üzeri.
+*   **Paket Yöneticisi:** NPM (Node.js ile gelir) veya Yarn.
+*   **Git:** Versiyon kontrolü için son sürüm.
+
+### 🏭 Sunucu & Yayınlama (Production / IIS)
+*   **OS:** Windows Server 2016+ veya Windows 10/11 Pro.
+*   **IIS:** Sürüm 10 veya üzeri.
+*   **Gerekli IIS Modülleri:**
+    *   [URL Rewrite Module 2.1](https://www.iis.net/downloads/microsoft/url-rewrite)
+    *   [Application Request Routing (ARR) 3.0](https://www.iis.net/downloads/microsoft/application-request-routing)
+*   **Donanım (Önerilen):**
+    *   **RAM:** Minimum 4GB (Büyük veritabanı işlemleri için).
+    *   **Disk:** Veritabanı boyutuna bağlı olarak yeterli SSD alanı.
+
+### 📱 İstemci (Kullanıcılar)
+*   **Tarayıcı:** Modern web tarayıcıları (Chrome, Edge, Firefox, Safari).
+*   **Ekran:** Responsive tasarım (Masaüstü, Tablet veya Mobil uyumlu).
+
 ## 🛠️ Kurulum ve Çalıştırma
-
-Projeyi yerel makinenizde çalıştırmak için aşağıdaki adımları izleyin.
-
-### Ön Gereksinimler (Prerequisites)
-*   [Node.js](https://nodejs.org/) (v16 veya üzeri önerilir)
-*   Git
 
 ### 1. Projeyi Klonlayın
 ```bash
