@@ -55,9 +55,9 @@ app.post('/api/open', async (req, res) => {
 
 // List files (flattened search or tree)
 app.get('/api/files', (req, res) => {
-    const { query, parentPath } = req.query;
+    const { query, parentPath, category } = req.query;
     try {
-        const files = fileService.getFiles({ query, parentPath });
+        const files = fileService.getFiles({ query, parentPath, category });
         res.json(files);
     } catch (error) {
         console.error('List error:', error);
@@ -84,6 +84,39 @@ app.patch('/api/file/:id/metadata', (req, res) => {
         const success = fileService.updateFileMetadata(req.params.id, { tags, importance });
         if (success) res.json({ success: true });
         else res.status(404).json({ error: 'File not found' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Create File/Folder
+app.post('/api/files/create', async (req, res) => {
+    const { parentPath, name, type } = req.body;
+    try {
+        await fileService.createItem(parentPath, name, type);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Rename File/Folder
+app.post('/api/files/rename', async (req, res) => {
+    const { id, newName } = req.body;
+    try {
+        await fileService.renameItem(id, newName);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Delete File/Folder
+app.delete('/api/files/delete/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await fileService.deleteItem(id);
+        res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
