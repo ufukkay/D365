@@ -150,6 +150,23 @@ app.get('/api/shortcuts', (req, res) => {
     }
 });
 
+// Stream File Content (for Preview)
+app.get('/api/stream', (req, res) => {
+    const filePath = req.query.path;
+    if (!filePath) return res.status(400).send('Path required');
+
+    // Security: Validate path exists and is a file
+    // In production, you'd want to prevent directory traversal outside allowed scopes.
+    // For local tool, we assume user has access to their system.
+
+    res.sendFile(path.resolve(filePath), (err) => {
+        if (err) {
+            console.error("Stream error:", err);
+            if (!res.headersSent) res.status(404).send('File not found or inaccessible');
+        }
+    });
+});
+
 // Start Server
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

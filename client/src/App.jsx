@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, RefreshCw, FolderSearch, Home, ChevronRight, Folder, Sun, Moon, Languages } from 'lucide-react';
+import { Search, FolderSearch, Home, ChevronRight, Folder, Sun, Moon, Languages } from 'lucide-react';
 import FileCard from './components/FileCard';
 import DirectoryPicker from './components/DirectoryPicker';
 import ContextMenu from './components/ContextMenu';
 import ActionModal from './components/ActionModal';
+import PreviewModal from './components/PreviewModal';
 
 const translations = {
   tr: {
@@ -74,10 +75,21 @@ function App() {
   const [showPicker, setShowPicker] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [lang, setLang] = useState(localStorage.getItem('lang') || 'tr');
-
   const t = translations[lang];
 
-  // ... (Theme and Lang logic remains same)
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  // Save language preference
+  useEffect(() => {
+    localStorage.setItem('lang', lang);
+  }, [lang]);
 
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
   const toggleLang = () => setLang(lang === 'tr' ? 'en' : 'tr');
@@ -264,11 +276,28 @@ function App() {
     }
   };
 
+  // Preview State
+  const [previewFile, setPreviewFile] = useState(null);
+
+  // ... (existing code)
+
+  const handlePreview = (file) => {
+    setPreviewFile(file);
+  };
+
+  // Double click handler for files
+  const handleFileDoubleClick = (file) => {
+    if (file.type === 'directory') {
+      handleFolderClick(file.path);
+    } else {
+      handlePreview(file);
+    }
+  };
+
   return (
     <div
       className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200"
       onContextMenu={(e) => {
-        // Only trigger background context menu if not clicking on a file (bubbling handled usually, but valid to check target)
         if (e.target === e.currentTarget || e.target.closest('main')) {
           handleContextMenu(e, null);
         }
@@ -304,18 +333,33 @@ function App() {
         </div>
       </header>
 
-      {/* Context Menu Render */}
+      {/* Preview Modal */}
+      {previewFile && (
+        <PreviewModal
+          file={previewFile}
+          onClose={() => setPreviewFile(null)}
+        />
+      )}
+
+      {/* Context Menu */}
       {contextMenu.visible && (
         <ContextMenu
           x={contextMenu.x}
           y={contextMenu.y}
           file={contextMenu.file}
           onClose={() => setContextMenu({ ...contextMenu, visible: false })}
-          onAction={handleMenuAction}
+          onAction={(action, file) => {
+            if (action === 'open') {
+              if (file.type === 'directory') handleFolderClick(file.path);
+              else handlePreview(file);
+            } else {
+              handleMenuAction(action, file);
+            }
+          }}
         />
       )}
 
-      {/* Action Modal Render */}
+      {/* Action Modal */}
       <ActionModal
         isOpen={actionModal.isOpen}
         onClose={() => setActionModal(prev => ({ ...prev, isOpen: false }))}
@@ -331,7 +375,23 @@ function App() {
         <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center">
           {/* Scan Button & Picker */}
           <div className="flex gap-2 w-full md:w-auto flex-shrink-0">
-            {/* ... (Scan button code, identical to original) ... */}
+            <button
+              onClick={() => startScan(scanPath)}
+              disabled={scanning}
+              className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
+            >
+              {scanning ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  <span>{t.scanning}</span>
+                </>
+              ) : (
+                <>
+                  <FolderSearch size={20} />
+                  <span>{t.scanButton}</span>
+                </>
+              )}
+            </button>
             <button
               onClick={() => setShowPicker(!showPicker)}
               className="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
@@ -425,7 +485,7 @@ function App() {
             </div>
           ) : (
             <>
-              {/* Shortcuts (Only shown when no folder is selected / Welcome state) */}
+              {/* Shortcuts */}
               {!currentBrowsePath && !search && shortcuts.length > 0 && category === 'all' && (
                 <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
                   <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Hızlı Erişim</h2>
@@ -458,7 +518,7 @@ function App() {
                   {files.map(file => (
                     <div
                       key={file.id}
-                      onClick={() => file.type === 'directory' && handleFolderClick(file.path)}
+                      onDoubleClick={() => handleFileDoubleClick(file)}
                       onContextMenu={(e) => {
                         e.stopPropagation();
                         handleContextMenu(e, file);
@@ -483,14 +543,14 @@ function App() {
           )
         }
 
-        {/* Modals */}
+        {/* Directory Picker Modal */}
         {
           showPicker && (
             <DirectoryPicker
               onClose={() => setShowPicker(false)}
               onSelect={(path) => {
                 setScanPath(path);
-                startScan(path); // Auto-scan on select
+                startScan(path);
                 setShowPicker(false);
               }}
             />

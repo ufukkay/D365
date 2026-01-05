@@ -180,19 +180,45 @@ const updateFileMetadata = (id, { tags, importance }) => {
     return res.changes > 0;
 };
 
+const util = require('util');
+const execPromise = util.promisify(require('child_process').exec);
+
 // System Directory Browsing
 const browseSystem = async (browsePath) => {
     if (!browsePath) {
         if (os.platform() === 'win32') {
-            const drives = [];
-            for (let i = 67; i <= 90; i++) {
-                const drive = String.fromCharCode(i) + ':';
-                try {
-                    await fs.access(drive + '\\');
-                    drives.push({ name: drive, path: drive + '\\', type: 'drive' });
-                } catch { }
+            try {
+                // Use PowerShell to get Drive Letter and Volume Name
+                const { stdout } = await execPromise('powershell "Get-CimInstance -ClassName Win32_LogicalDisk | Select-Object DeviceID, VolumeName | ConvertTo-Json"');
+
+                let drives = JSON.parse(stdout);
+                // Handle single drive case (object instead of array)
+                if (!Array.isArray(drives)) {
+                    drives = [drives];
+                }
+
+                return drives.map(drive => {
+                    const letter = drive.DeviceID;
+                    const name = drive.VolumeName ? `${drive.VolumeName} (${letter})` : `Local Disk (${letter})`;
+                    return {
+                        name: name,
+                        path: letter + '\\',
+                        type: 'drive'
+                    };
+                });
+            } catch (err) {
+                console.error("PowerShell drive fetch failed, falling back to basic loop:", err);
+                // Fallback to basic loop
+                const drives = [];
+                for (let i = 67; i <= 90; i++) {
+                    const drive = String.fromCharCode(i) + ':';
+                    try {
+                        await fs.access(drive + '\\');
+                        drives.push({ name: drive, path: drive + '\\', type: 'drive' });
+                    } catch { }
+                }
+                return drives;
             }
-            return drives;
         } else {
             return [{ name: '/', path: '/', type: 'directory' }];
         }
